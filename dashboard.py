@@ -291,9 +291,6 @@ if np.unique(merged["grade"]).any() == "Not Recorded":
     st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
     st.stop()
 
-st.write(merged)
-
-st.write(merged)
 
 
 # create a number of columns and rows for the metrics
