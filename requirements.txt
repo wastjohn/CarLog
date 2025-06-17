@@ -1,7 +1,6 @@
-streamlit
-pandas
-plotly
-st-gsheets-connection
-numpy
-datetime
-dateutile
+numpy==2.3.0
+pandas==2.3.0
+plotly==6.0.1
+python_dateutil==2.9.0.post0
+st_gsheets_connection==0.1.0
+streamlit==1.45.1
