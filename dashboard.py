@@ -283,7 +283,7 @@ car = st.selectbox("Select Car to View More Details", options=cars_unique, key="
 merged = get_car_maintenance_health(car)
 
 if np.unique(merged["grade"]).any() == "Not Recorded":
-    st.error(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
+    st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
     st.stop()
 
 
