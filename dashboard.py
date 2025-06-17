@@ -243,6 +243,8 @@ def get_car_maintenance_health(car):
 
 # setup basic page
 st.title("CarLog Dashboard")
+st.write("Sometimes the data doesn't update immediately, so you can clear the cache to force a refresh.")
+st.button("Clear Cache", on_click=st.cache_resource.clear())
 st.subheader("Car Health Overview")
 
 cars_unique = np.unique(df["Car"])  # get the unique cars from the dataframe
@@ -285,6 +287,8 @@ merged = get_car_maintenance_health(car)
 if np.unique(merged["grade"]).any() == "Not Recorded":
     st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
     st.stop()
+
+st.write(merged)
 
 
 # create a number of columns and rows for the metrics
