@@ -51,13 +51,11 @@ def get_color(grade):
 # setpage config
 st.set_page_config(page_title="Dashboard", layout="wide")
 
-
-# connect to google sheet
 conn = st.connection("gsheets", type=GSheetsConnection)
 df = conn.read(
-    spreadsheet="https://docs.google.com/spreadsheets/d/1k26SF5V4aEH8NH4_XH7kSDn1wPg0iqEjkGmdM8scTac/edit?gid=0#gid=0",
-    ttl="10m"
-)
+        spreadsheet="https://docs.google.com/spreadsheets/d/1k26SF5V4aEH8NH4_XH7kSDn1wPg0iqEjkGmdM8scTac/edit?gid=0#gid=0",
+        ttl="10m")
+
 
 maintenances = [
             "Head gasket inspection",
@@ -243,6 +241,13 @@ def get_car_maintenance_health(car):
 
 # setup basic page
 st.title("CarLog Dashboard")
+st.write("Sometimes the data doesn't update immediately, so you can clear the cache to force a refresh.")
+if st.button("Fetch Data"):
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    # st.experimental_rerun()  # Reruns the script to reflect changes
+    st.success("Cache cleared successfully!")
+
 st.subheader("Car Health Overview")
 
 cars_unique = np.unique(df["Car"])  # get the unique cars from the dataframe
@@ -285,6 +290,8 @@ merged = get_car_maintenance_health(car)
 if np.unique(merged["grade"]).any() == "Not Recorded":
     st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
     st.stop()
+
+st.write(merged)
 
 
 # create a number of columns and rows for the metrics
