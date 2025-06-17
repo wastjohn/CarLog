@@ -293,6 +293,8 @@ if np.unique(merged["grade"]).any() == "Not Recorded":
 
 st.write(merged)
 
+st.write(merged)
+
 
 # create a number of columns and rows for the metrics
 col1, col2, col3 = st.columns(3)
