@@ -142,7 +142,7 @@ m_cycles_miles = [
     10000,  # Power steering fluid inspection
     30000,  # Power steering fluid replacement
     10000,  # Automatic transmission fluid inspection
-    30000,  # Automatic transmission fluid replacement
+    24000,  # Automatic transmission fluid replacement
     10000,  # Engine coolant inspection
     30000,  # Engine coolant replacement
     90000,  # Engine coolant (high milage) replacement
@@ -199,14 +199,14 @@ dfm = pd.DataFrame({
 def get_car_maintenance_health(car):
     car_mask = df["Car"] == car  # select the car from the dataframe
     m_mask = df["What type of record is this?"] == "Car maintenance"  # select only car maintenance records
-    last_m = df[m_mask][car_mask][["Odometer reading", "Car", "Date", "What type of maintenance?"]]  # create a dataframe with the last maintenance records
+    last_m = df[m_mask][car_mask][["Odometer", "Car", "Date", "What type of maintenance?"]]  # create a dataframe with the last maintenance records
 
     if last_m.empty:
         last_m["grade"] = ["Not Recorded" for _ in range(len(maintenances))]
         return last_m  # if there are no maintenance records, return False
 
     # tidy up the last maintenance records
-    last_m = last_m.assign(maintenance=last_m["What type of maintenance?"].str.split(", ")).explode("maintenance").reset_index(drop=True)[["Car", "Date", "maintenance"]]
+    last_m = last_m.assign(maintenance=last_m["What type of maintenance?"].str.split(", ")).explode("maintenance").reset_index(drop=True)[["Car", "Date", "maintenance", "Odometer"]]
     last_m["Date"] = last_m["Date"].apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
     last_m = last_m.sort_values(by=["maintenance","Date"], ascending=[True, False]).groupby("maintenance").first().reset_index()
 
@@ -226,6 +226,8 @@ def get_car_maintenance_health(car):
     merged["Date"] = merged["Date"].fillna(datetime(1800,1,1))
     merged["next_maintenance_months"] = merged["Date"] + merged["months"].apply(lambda x: relativedelta(months=np.floor(x)))  # non-integer months is amniguous, so we use floor
     # TODO: handle the next maintenance based on the car's odometer reading
+
+    merged["next_maintenance_miles"] = merged["Odometer"] + merged["milage"]
 
     # prepare for some date calculations
     merged["next_maintenance_months"] = merged["next_maintenance_months"].apply(lambda x: datetime.strptime(x.strftime("%Y-%m-01"), "%Y-%m-%d"))
@@ -277,7 +279,7 @@ car_health_fig.update_xaxes(showticklabels=False, ticks="", showline=False)  # h
 
 st.plotly_chart(car_health_fig, use_container_width=True)  # show the car health bar chart
 
-
+st.write(df)
 # horizontal line
 st.markdown("---")
 
@@ -287,38 +289,72 @@ car = st.selectbox("Select Car to View More Details", options=cars_unique, key="
 
 merged = get_car_maintenance_health(car)
 
+st.write(merged)
+
 if np.unique(merged["grade"]).any() == "Not Recorded":
     st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
     st.stop()
 
 
-
+milage, months = st.tabs(["Milage", "Months"])
 # create a number of columns and rows for the metrics
-col1, col2, col3 = st.columns(3)
 
-for i in range(len(merged)):
-    if i % 3 == 0:
-        col = col1
-    elif i % 3 == 1:
-        col = col2
-    else:
-        col = col3
+with months:
+    col1, col2, col3 = st.columns(3)
 
-    if merged["grade"][i] == "Not Recorded":
-        col.metric(
-            label=f"{merged['maintenance'][i]}",
-            value=f"NA",
-            delta=merged["grade"][i],
-            delta_color=get_color(merged["grade"][i]),
-            border=True,
-            help=f"Don't forget to record the next maintenance for {merged['maintenance'][i]} (Not Recorded)"
-        )
-    else:
-        col.metric(
-            label=f"{merged['maintenance'][i]}",
-            value=f"{merged['difference_days'][i]} days",
-            delta=merged["grade"][i],
-            delta_color=get_color(merged["grade"][i]),
-            border=True,
-            help=f"Next maintenance due on {merged['next_maintenance_months'][i].strftime('%Y-%m-%d')} ({merged["grade"][i]})"
-        )
+    for i in range(len(merged)):
+        if i % 3 == 0:
+            col = col1
+        elif i % 3 == 1:
+            col = col2
+        else:
+            col = col3
+
+        if merged["grade"][i] == "Not Recorded":
+            col.metric(
+                label=f"{merged['maintenance'][i]}",
+                value=f"NA",
+                delta=merged["grade"][i],
+                delta_color=get_color(merged["grade"][i]),
+                border=True,
+                help=f"Don't forget to record the next maintenance for {merged['maintenance'][i]} (Not Recorded)"
+            )
+        else:
+            col.metric(
+                label=f"{merged['maintenance'][i]}",
+                value=f"{merged['difference_days'][i]} days",
+                delta=merged["grade"][i],
+                delta_color=get_color(merged["grade"][i]),
+                border=True,
+                help=f"Next maintenance due on {merged['next_maintenance_months'][i].strftime('%Y-%m-%d')} ({merged["grade"][i]})"
+            )
+
+with milage:
+    col1, col2, col3 = st.columns(3)
+
+    for i in range(len(merged)):
+        if i % 3 == 0:
+            col = col1
+        elif i % 3 == 1:
+            col = col2
+        else:
+            col = col3
+
+        if merged["grade"][i] == "Not Recorded":
+            col.metric(
+                label=f"{merged['maintenance'][i]}",
+                value=f"NA",
+                delta=merged["grade"][i],
+                delta_color=get_color(merged["grade"][i]),
+                border=True,
+                help=f"Don't forget to record the next maintenance for {merged['maintenance'][i]} (Not Recorded)"
+            )
+        else:
+            col.metric(
+                label=f"{merged['maintenance'][i]}",
+                value=f"ODO: {merged['next_maintenance_miles'][i]}",
+                delta=merged["grade"][i],
+                delta_color=get_color(merged["grade"][i]),
+                border=True,
+                help=f"Next maintenance due on {merged['next_maintenance_months'][i].strftime('%Y-%m-%d')} ({merged["grade"][i]})"
+            )
