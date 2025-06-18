@@ -7,6 +7,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 
+# TODO: stats for gas: MPG for last fill up, overall MPG, ability to look at by car, by grade, by fillup station
+
 def get_grade(days):
     """Determine the maintenance grade based on the number of days until the next maintenance.
 
@@ -284,7 +286,9 @@ st.plotly_chart(car_health_fig, use_container_width=True)  # show the car health
 st.markdown("---")
 
 st.subheader("More Details")
-car = st.selectbox("Select Car to View More Details", options=cars_unique, key="car_select")  # select what car to view
+
+small_col, _ = st.columns([1,3])
+car = small_col.selectbox("Select Car to View More Details", options=cars_unique, key="car_select")  # select what car to view
 
 
 merged = get_car_maintenance_health(car)
