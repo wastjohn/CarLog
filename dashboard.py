@@ -252,7 +252,9 @@ if st.button("Fetch Data"):
     # st.experimental_rerun()  # Reruns the script to reflect changes
     st.success("Cache cleared successfully!")
 
-st.subheader("Car Health Overview")
+st.subheader("Maintenance and Gas Overview")
+main_tab, gas_tab = st.tabs(["Maintenance", "Gas"])
+main_tab.subheader("Car Health Overview")
 
 cars_unique = np.unique(df["Car"])  # get the unique cars from the dataframe
 grades = [get_car_maintenance_health(car)['grade'] for car in cars_unique]
@@ -279,15 +281,15 @@ car_health_fig = px.bar(
 )
 car_health_fig.update_xaxes(showticklabels=False, ticks="", showline=False)  # hide the x-axis tick labels
 
-st.plotly_chart(car_health_fig, use_container_width=True)  # show the car health bar chart
-
+main_tab.plotly_chart(car_health_fig, use_container_width=True)  # show the car health bar chart
+main_tab.write("This chart shows the maintenance grade for each car. Green is good (not due for > 90 days), red is due (due in <= 90 days or overdue for < 50 days), and grey is not recorded (overdue for >= 50 days).")
 # st.write(df)
 # horizontal line
-st.markdown("---")
+main_tab.markdown("---")
 
-st.subheader("More Details")
+main_tab.subheader("More Maintenance Details")
 
-small_col, _ = st.columns([1,3])
+small_col, _ = main_tab.columns([1,3])
 car = small_col.selectbox("Select Car to View More Details", options=cars_unique, key="car_select")  # select what car to view
 
 
@@ -296,11 +298,11 @@ merged = get_car_maintenance_health(car)
 # st.write(merged)
 
 if np.unique(merged["grade"]).any() == "Not Recorded":
-    st.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
-    st.stop()
+    main_tab.write(f"No maintenance records found for {car}. Please add more records via the form on your phone.")
+    main_tab.stop()
 
 
-milage, months = st.tabs(["Milage", "Months"])
+milage, months = main_tab.tabs(["Milage", "Months"])
 # create a number of columns and rows for the metrics
 
 with months:
@@ -362,3 +364,9 @@ with milage:
                 border=True,
                 help=f"Next maintenance due on {merged['next_maintenance_months'][i].strftime('%Y-%m-%d')} ({merged["grade"][i]})"
             )
+
+
+
+# Gas Stats Section
+gas_tab.subheader("Gas Overview")
+st.write("This section is still under construction. Please check back later.")
