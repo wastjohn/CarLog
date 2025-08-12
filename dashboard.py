@@ -290,7 +290,7 @@ main_tab.markdown("---")
 main_tab.subheader("More Maintenance Details")
 
 small_col, _ = main_tab.columns([1,3])
-car = small_col.selectbox("Select Car to View More Details", options=cars_unique, key="car_select")  # select what car to view
+car = small_col.radio("Select Car to View More Details", options=cars_unique, key="car_select", horizontal=True)  # select what car to view
 
 
 merged = get_car_maintenance_health(car)
@@ -369,4 +369,39 @@ with milage:
 
 # Gas Stats Section
 gas_tab.subheader("Gas Overview")
-st.write("This section is still under construction. Please check back later.")
+gas_tab.write("This section is still under construction. Please check back later.")
+
+
+car_choice = gas_tab.multiselect("Select a car to view", options=cars_unique, default=cars_unique[0], key="gas_car_select")
+mask = (df["Car"].isin(car_choice)) & (df["What type of record is this?"] == "Gas record")
+gasdf = df[mask][["Car", "Date", "Odometer reading", "Address:", "Brand of Fuel", "Octane", "Total Price in Cents", "Number of Gallons", "Does this match your recipt?", "Price per gallon"]].sort_values(by=["Date", "Odometer reading"], ascending=True).reset_index(drop=True)
+
+gasdf["mpg"] = gasdf["Odometer reading"].diff() / gasdf["Number of Gallons"] * 1000 # calculate mpg
+# gas_tab.write(gasdf)
+
+mpg_plot = px.line(gasdf, x="Date", y="mpg", color="Car", title=f"MPG Over Time for {car_choice}", hover_data=["Address:", "Brand of Fuel", "Octane", "Total Price in Cents", "Number of Gallons", "Does this match your recipt?"])
+# gas_tab.plotly_chart(mpg_plot, use_container_width=True)
+
+
+milage_plot = px.line(gasdf, x="Date", y="Odometer reading", color="Car", title=f"Gas Mileage Over Time for {car_choice}", hover_data=["Address:", "Brand of Fuel", "Octane", "Total Price in Cents", "Number of Gallons", "Does this match your recipt?"])
+# gas_tab.plotly_chart(milage_plot, use_container_width=True)
+
+
+ppg_plot = px.line(gasdf, x="Date", y="Price per gallon", color="Car", title=f"Gas Price Over Time for {car_choice}", hover_data=["Address:", "Brand of Fuel", "Octane", "Total Price in Cents", "Number of Gallons", "Does this match your recipt?"])
+# gas_tab.plotly_chart(ppg_plot, use_container_width=True)
+
+
+gascol1, gascol2, gascol3 = gas_tab.columns(3)
+
+gascol1.plotly_chart(mpg_plot, use_container_width=True)
+gascol2.plotly_chart(milage_plot, use_container_width=True)
+gascol3.plotly_chart(ppg_plot, use_container_width=True)
+
+gascol1.metric(label="Total Fill Ups", value=len(gasdf))
+gascol2.metric(label="Total Gallons", value=f"{gasdf['Number of Gallons'].sum():.2f} gal")
+
+
+delta = gasdf["Price per gallon"].median() - gasdf["Price per gallon"].iloc[:-1].median()
+delta_color = "normal" if delta > 0 else "inverse"
+gascol3.metric(label="Average Price per Gallon", value=f"${gasdf['Price per gallon'].median():.2f}/gal", delta=f"{delta:.2f}/gal", delta_color=delta_color)
+
